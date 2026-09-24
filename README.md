@@ -27,14 +27,18 @@ Applications often organize business logic into focused classes, such as actions
 ProcessPayment::run($order);
 ```
 
-Prefer a facade or helper? You can use those, too:
+Using the facade:
 
 ```php
 use DirectoryTree\Runnable\Facades\Run;
 
-use function DirectoryTree\Runnable\run;
-
 Run::execute(ProcessPayment::class, $order);
+```
+
+Using the helper:
+
+```php
+use function DirectoryTree\Runnable\run;
 
 run(ProcessPayment::class, $order);
 ```
@@ -113,17 +117,29 @@ You can place runnable classes wherever they belong in your application. The tra
 
 ### Running Classes
 
-Use the static method, facade, or imported helper:
+Using the `Runnable` trait's static method:
+
+```php
+use App\Actions\ProcessPayment;
+
+$response = ProcessPayment::run($order);
+```
+
+Using the facade:
 
 ```php
 use App\Actions\ProcessPayment;
 use DirectoryTree\Runnable\Facades\Run;
 
-use function DirectoryTree\Runnable\run;
-
-$response = ProcessPayment::run($order);
-
 $response = Run::execute(ProcessPayment::class, $order);
+```
+
+Using the helper:
+
+```php
+use App\Actions\ProcessPayment;
+
+use function DirectoryTree\Runnable\run;
 
 $response = run(ProcessPayment::class, $order);
 ```
