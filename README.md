@@ -152,12 +152,27 @@ The helper is namespaced, so import it with `use function DirectoryTree\Runnable
 
 ### Running Instances
 
-If you already have an instance, pass it directly:
+If you already have an instance, pass it directly.
+
+Using the facade:
 
 ```php
+use App\Actions\ProcessPayment;
+use DirectoryTree\Runnable\Facades\Run;
+
 $payment = new ProcessPayment($gateway);
 
 $response = Run::execute($payment, $order);
+```
+
+Using the helper:
+
+```php
+use App\Actions\ProcessPayment;
+
+use function DirectoryTree\Runnable\run;
+
+$payment = new ProcessPayment($gateway);
 
 $response = run($payment, $order);
 ```
