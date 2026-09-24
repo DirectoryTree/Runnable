@@ -24,7 +24,7 @@
 Applications often organize business logic into focused classes, such as actions and queries. Runnable gives these classes a familiar way to be executed and faked, without requiring a base class or interface.
 
 ```php
-ProcessPayment::run($order);
+$response = ProcessPayment::run($order);
 ```
 
 Using the facade:
@@ -32,7 +32,7 @@ Using the facade:
 ```php
 use DirectoryTree\Runnable\Facades\Run;
 
-Run::execute(ProcessPayment::class, $order);
+$response = Run::execute(ProcessPayment::class, $order);
 ```
 
 Using the helper:
@@ -40,7 +40,7 @@ Using the helper:
 ```php
 use function DirectoryTree\Runnable\run;
 
-run(ProcessPayment::class, $order);
+$response = run(ProcessPayment::class, $order);
 ```
 
 All three resolve your class through Laravel's container, pass the arguments to `handle()`, and return its result. Execution is synchronous, and exceptions bubble up to the caller.
