@@ -160,9 +160,7 @@ Using the facade:
 use App\Actions\ProcessPayment;
 use DirectoryTree\Runnable\Facades\Run;
 
-$payment = new ProcessPayment($gateway);
-
-$response = Run::execute($payment, $order);
+$response = Run::execute(new ProcessPayment($gateway), $order);
 ```
 
 Using the helper:
@@ -172,9 +170,7 @@ use App\Actions\ProcessPayment;
 
 use function DirectoryTree\Runnable\run;
 
-$payment = new ProcessPayment($gateway);
-
-$response = run($payment, $order);
+$response = run(new ProcessPayment($gateway), $order);
 ```
 
 Runnable executes that exact instance. Its constructor dependencies are your responsibility, and container bindings or fakes for its class will not replace it.
