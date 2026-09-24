@@ -5,6 +5,13 @@
 <p align="center">Run and fake focused PHP classes using Laravel's container.</p>
 
 <p align="center">
+<a href="https://github.com/directorytree/runnable/actions"><img src="https://img.shields.io/github/actions/workflow/status/directorytree/runnable/run-tests.yml?branch=master&style=flat-square" alt="Tests"></a>
+<a href="https://packagist.org/packages/directorytree/runnable"><img src="https://img.shields.io/packagist/dt/directorytree/runnable.svg?style=flat-square" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/directorytree/runnable"><img src="https://img.shields.io/packagist/v/directorytree/runnable.svg?style=flat-square" alt="Latest Version"></a>
+<a href="https://github.com/directorytree/runnable/blob/master/LICENSE.md"><img src="https://img.shields.io/github/license/directorytree/runnable?style=flat-square" alt="License"></a>
+</p>
+
+<p align="center">
   <a href="#installation">Installation</a>
   <span> · </span>
   <a href="#usage">Usage</a>
