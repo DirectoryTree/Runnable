@@ -168,11 +168,7 @@ The static method is a convenience. Your class remains an ordinary PHP class.
 
 ## Testing
 
-Runnable uses Mockery to replace individual classes in Laravel's container. If your application does not already have Mockery installed, add it as a development dependency:
-
-```bash
-composer require mockery/mockery --dev
-```
+Runnable uses Mockery to replace individual classes in Laravel's container.
 
 Use these examples in Laravel application tests, where the application container and Mockery are reset between tests.
 
