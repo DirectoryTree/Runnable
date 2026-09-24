@@ -1,0 +1,65 @@
+{
+    "name": "directorytree/runnable",
+    "description": "Run and fake focused PHP classes using Laravel's container.",
+    "type": "library",
+    "keywords": [
+        "laravel",
+        "runnable",
+        "actions",
+        "testing"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Steve Bauman",
+            "email": "steven_bauman@outlook.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^12.0|^13.0",
+        "illuminate/container": "^12.0|^13.0",
+        "illuminate/contracts": "^12.0|^13.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.0",
+        "mockery/mockery": "^1.6",
+        "pestphp/pest": "^3.0|^4.0",
+        "orchestra/testbench": "^10.0|^11.0"
+    },
+    "suggest": {
+        "mockery/mockery": "Required to fake runnable classes (^1.6)."
+    },
+    "autoload": {
+        "psr-4": {
+            "DirectoryTree\\Runnable\\": "src/"
+        },
+        "files": [
+            "src/functions.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "DirectoryTree\\Runnable\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "DirectoryTree\\Runnable\\RunnableServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest",
+        "format": "vendor/bin/pint",
+        "lint": "vendor/bin/pint --test"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}
