@@ -54,9 +54,6 @@ All three resolve your class through Laravel's container, pass the arguments to 
   - [Faking Results](#faking-results)
   - [Faking Callbacks](#faking-callbacks)
   - [Verifying Calls](#verifying-calls)
-- [Contributing](#contributing)
-- [Security](#security)
-- [License](#license)
 
 ## Requirements
 
@@ -231,26 +228,3 @@ Or verify that a runnable was not called:
 ```php
 $fake->shouldNotHaveReceived('handle');
 ```
-
-## Contributing
-
-Install the dependencies and run the tests:
-
-```bash
-composer install
-composer test
-```
-
-Format your changes using Laravel Pint:
-
-```bash
-composer format
-```
-
-## Security
-
-If you discover a security vulnerability, please email [Steve Bauman](mailto:steven_bauman@outlook.com) instead of using the issue tracker.
-
-## License
-
-Runnable is open-sourced software licensed under the [MIT license](LICENSE.md).
