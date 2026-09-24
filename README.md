@@ -35,8 +35,6 @@ $response = ProcessPayment::run($order);
 
 ## Installation
 
-> Runnable has not been published to Packagist yet. Until release, use a Composer path repository pointing to your local checkout and require `directorytree/runnable:dev-master`.
-
 ```bash
 composer require directorytree/runnable
 ```
