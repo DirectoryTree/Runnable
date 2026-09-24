@@ -19,45 +19,14 @@
   <a href="#testing">Testing</a>
 </p>
 
+
 ---
 
-Applications often organize business logic into focused classes, such as actions and queries. Runnable gives these classes a familiar way to be executed and faked, without requiring a base class or interface.
+Runnable gives your action and query classes a familiar way to run and fake their results.
 
 ```php
 $response = ProcessPayment::run($order);
 ```
-
-Using the facade:
-
-```php
-use DirectoryTree\Runnable\Facades\Run;
-
-$response = Run::execute(ProcessPayment::class, $order);
-```
-
-Using the helper:
-
-```php
-use function DirectoryTree\Runnable\run;
-
-$response = run(ProcessPayment::class, $order);
-```
-
-All three resolve your class through Laravel's container, pass the arguments to `handle()`, and return its result. Execution is synchronous, and exceptions bubble up to the caller.
-
-## Index
-
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Usage](#usage)
-  - [Creating a Runnable](#creating-a-runnable)
-  - [Running Classes](#running-classes)
-  - [Running Instances](#running-instances)
-  - [Dependency Injection](#dependency-injection)
-- [Testing](#testing)
-  - [Faking Results](#faking-results)
-  - [Faking Callbacks](#faking-callbacks)
-  - [Verifying Calls](#verifying-calls)
 
 ## Requirements
 
@@ -66,9 +35,7 @@ All three resolve your class through Laravel's container, pass the arguments to 
 
 ## Installation
 
-> Runnable is in development and has not been published to Packagist yet. The Composer command below is for the first release. To try this local checkout, add it as a Composer path repository in your application and require `directorytree/runnable:dev-master`.
-
-You can install the package via Composer:
+> Runnable has not been published to Packagist yet. Until release, use a Composer path repository pointing to your local checkout and require `directorytree/runnable:dev-master`.
 
 ```bash
 composer require directorytree/runnable
@@ -78,9 +45,7 @@ The service provider is automatically registered. There is no configuration to p
 
 ## Usage
 
-### Creating a Runnable
-
-Add the `Runnable` trait to a class with a `handle()` method:
+Add the `Runnable` trait to a class with a public `handle()` method:
 
 ```php
 namespace App\Actions;
@@ -105,19 +70,11 @@ class ProcessPayment
 }
 ```
 
-Constructor dependencies are resolved by Laravel's container. Arguments supplied when running the class are passed to `handle()`:
-
-```php
-$response = ProcessPayment::run($order);
-```
-
-In this example, `PaymentGateway` is an application interface. Bind it to your implementation in the container as you normally would.
-
-You can place runnable classes wherever they belong in your application. The trait does not require an `Actions` directory or a particular naming convention.
+Laravel resolves constructor dependencies through the container. Bind interfaces such as `PaymentGateway` to your implementation as usual.
 
 ### Running Classes
 
-Using the `Runnable` trait's static method:
+Using the trait:
 
 ```php
 use App\Actions\ProcessPayment;
@@ -144,15 +101,11 @@ use function DirectoryTree\Runnable\run;
 $response = run(ProcessPayment::class, $order);
 ```
 
-Pass the class or instance as the first positional argument to the facade or helper. Remaining arguments are forwarded to `handle()`, including named arguments.
+All three run `handle()` synchronously and return its result. Arguments, including named arguments, are forwarded to `handle()`, and exceptions propagate to the caller. For the facade and helper, pass the class as the first positional argument.
 
-The facade and helper can execute any class with a public `handle()` method. The trait is only needed for the class's static `run()` and `fake()` methods.
-
-The helper is namespaced, so import it with `use function DirectoryTree\Runnable\run;` before calling it.
+The facade and helper work without the trait. You can also inject your class and call `handle()` directly.
 
 ### Running Instances
-
-If you already have an instance, pass it directly.
 
 Using the facade:
 
@@ -173,60 +126,17 @@ use function DirectoryTree\Runnable\run;
 $response = run(new ProcessPayment($gateway), $order);
 ```
 
-Runnable executes the supplied instance unless a fake has been registered for its class. Ordinary container bindings do not replace it. Its constructor still runs, and supplying its constructor dependencies is your responsibility.
-
-### Dependency Injection
-
-Runnable classes can still be injected and called directly:
-
-```php
-public function store(Order $order, ProcessPayment $payment)
-{
-    $response = $payment->handle($order);
-
-    // ...
-}
-```
-
-The static method is a convenience. Your class remains an ordinary PHP class.
+Runnable executes the supplied instance unless you have registered a fake for its class. Ordinary container bindings do not replace it.
 
 ## Testing
 
-Runnable uses Mockery to fake individual classes, whether you run them by class name, pass an instance, or resolve them through Laravel's container.
-
-Use these examples in Laravel application tests, where the application container and Mockery are reset between tests.
-
-### Faking Results
-
-Provide the result you would like `handle()` to return:
+Call `fake()` before exercising your application code to replace a runnable's result and verify its calls:
 
 ```php
-$fake = ProcessPayment::fake($response);
+use App\Actions\ProcessPayment;
 
-expect(ProcessPayment::run($order))->toBe($response);
-```
+use function DirectoryTree\Runnable\run;
 
-The same fake is used by the facade, helper, and classes resolved through dependency injection:
-
-```php
-Run::execute(ProcessPayment::class, $order);
-
-run(ProcessPayment::class, $order);
-
-app(ProcessPayment::class)->handle($order);
-```
-
-You can also fake a class through the facade, including classes that do not use the trait:
-
-```php
-$fake = Run::fake(ProcessPayment::class, $response);
-```
-
-Pass `null` explicitly to return `null`. If you omit the result entirely, Mockery supplies its default return value for the method's declared return type. Supplied results must satisfy that return type.
-
-Fakes also intercept instances passed to the facade or helper:
-
-```php
 $fake = ProcessPayment::fake($response);
 
 $result = run(new ProcessPayment($gateway), $order);
@@ -236,9 +146,25 @@ expect($result)->toBe($response);
 $fake->shouldHaveReceived('handle')->with($order)->once();
 ```
 
-The fake intercepts `handle()`. The constructor still runs before the instance is passed to Runnable.
+The same fake works with all three execution styles and subsequent container resolutions, including dependency injection. Use it within Laravel application tests so the container and Mockery are reset between tests.
 
-Register your fake before exercising the application code under test. Container resolutions made after registration receive the fake. Calling `handle()` directly on an existing instance bypasses Runnable and executes the real method.
+Fakes intercept `handle()`, so an inline instance's constructor still runs. Calling `handle()` directly on a real instance bypasses Runnable.
+
+The returned fake supports Mockery assertions, including checking that it was never called:
+
+```php
+$fake->shouldNotHaveReceived('handle');
+```
+
+You can also register a fake through the facade, including for classes without the trait:
+
+```php
+use DirectoryTree\Runnable\Facades\Run;
+
+$fake = Run::fake(ProcessPayment::class, $response);
+```
+
+Pass `null` explicitly to return `null`. Omitting the result uses Mockery's default for the method's return type. Supplied results must satisfy that type.
 
 ### Faking Callbacks
 
@@ -248,24 +174,4 @@ Provide a closure when the result depends on the arguments:
 ProcessPayment::fake(
     fn (Order $order) => PaymentResponse::successful($order),
 );
-```
-
-### Verifying Calls
-
-The returned fake is a Mockery mock, so you can use its assertions:
-
-```php
-$fake = ProcessPayment::fake($response);
-
-ProcessPayment::run($order);
-
-$fake->shouldHaveReceived('handle')
-    ->once()
-    ->with($order);
-```
-
-Or verify that a runnable was not called:
-
-```php
-$fake->shouldNotHaveReceived('handle');
 ```
