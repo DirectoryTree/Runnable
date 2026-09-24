@@ -6,6 +6,7 @@ use DirectoryTree\Runnable\Runner;
 use DirectoryTree\Runnable\Tests\Fixtures\CalculateOrderTotal;
 use DirectoryTree\Runnable\Tests\Fixtures\CanAcceptOrders;
 use DirectoryTree\Runnable\Tests\Fixtures\FindDiscount;
+use Illuminate\Container\Container;
 
 use function DirectoryTree\Runnable\run;
 
@@ -27,6 +28,8 @@ it('forwards named arguments in every execution style', function () {
 });
 
 it('runs an existing instance with its own constructor values', function () {
+    app()->instance(CalculateOrderTotal::class, new CalculateOrderTotal(0.13));
+
     $runnable = new CalculateOrderTotal(0.05);
 
     expect(Run::execute($runnable, 10000))->toBe(10500)
@@ -111,14 +114,14 @@ it('uses Mockery return defaults when faking through the facade', function () {
     expect(CanAcceptOrders::run())->toBeFalse();
 });
 
-it('executes an existing instance even when its class is faked', function () {
+it('intercepts an existing instance when its class is faked', function () {
     $runnable = new CalculateOrderTotal(0.13);
     $fake = CalculateOrderTotal::fake(11500);
 
-    expect(run($runnable, 10000))->toBe(11300)
-        ->and(Run::execute($runnable, 10000))->toBe(11300);
+    expect(run($runnable, 10000))->toBe(11500)
+        ->and(Run::execute($runnable, 10000))->toBe(11500);
 
-    $fake->shouldNotHaveReceived('handle');
+    $fake->shouldHaveReceived('handle')->with(10000)->twice();
 });
 
 it('lets execution exceptions propagate', function () {
@@ -135,7 +138,8 @@ it('lets execution exceptions propagate', function () {
 });
 
 it('does not retain fakes between applications', function () {
-    expect(CanAcceptOrders::run())->toBeTrue();
+    expect(CanAcceptOrders::run())->toBeTrue()
+        ->and(run(new CanAcceptOrders))->toBeTrue();
 });
 
 it('forwards named arguments that match the execution parameters', function () {
@@ -159,4 +163,51 @@ it('forwards named arguments that match the execution parameters', function () {
         ->toBe(['SendInvoice', ['invoice' => 42]])
         ->and(run($workflow, arguments: ['invoice' => 42], runnable: 'SendInvoice'))
         ->toBe(['SendInvoice', ['invoice' => 42]]);
+});
+
+it('intercepts inline instances with a facade fake', function () {
+    $fake = Run::fake(CalculateOrderTotal::class, 11500);
+
+    expect(run(new CalculateOrderTotal(0.05), 10000))->toBe(11500)
+        ->and(Run::execute(new CalculateOrderTotal(0.13), 10000))->toBe(11500);
+
+    $fake->shouldHaveReceived('handle')->with(10000)->twice();
+});
+
+it('forwards named instance arguments to a fake callback', function () {
+    $fake = CalculateOrderTotal::fake(fn (int $subtotal, int $shipping) => $subtotal + $shipping);
+
+    expect(run(new CalculateOrderTotal, shipping: 1500, subtotal: 10000))->toBe(11500)
+        ->and(Run::execute(new CalculateOrderTotal, shipping: 1000, subtotal: 20000))->toBe(21000);
+
+    $fake->shouldHaveReceived('handle')->with(10000, 1500)->once();
+    $fake->shouldHaveReceived('handle')->with(20000, 1000)->once();
+});
+
+it('returns explicit null results for instances', function () {
+    FindDiscount::fake(null);
+
+    expect(run(new FindDiscount, 'SUMMER'))->toBeNull()
+        ->and(Run::execute(new FindDiscount, 'SUMMER'))->toBeNull();
+});
+
+it('uses the latest fake for instances and container resolutions', function () {
+    $previous = CalculateOrderTotal::fake(11500);
+    $replacement = CalculateOrderTotal::fake(12000);
+
+    expect(run(new CalculateOrderTotal, 10000))->toBe(12000)
+        ->and(CalculateOrderTotal::run(10000))->toBe(12000)
+        ->and(app(CalculateOrderTotal::class)->handle(10000))->toBe(12000);
+
+    $previous->shouldNotHaveReceived('handle');
+    $replacement->shouldHaveReceived('handle')->with(10000)->times(3);
+});
+
+it('keeps instance fakes isolated to their runner', function () {
+    CanAcceptOrders::fake();
+
+    $runner = new Runner(new Container);
+
+    expect(run(new CanAcceptOrders))->toBeFalse()
+        ->and($runner->execute(new CanAcceptOrders))->toBeTrue();
 });

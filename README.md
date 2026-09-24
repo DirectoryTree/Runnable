@@ -173,7 +173,7 @@ use function DirectoryTree\Runnable\run;
 $response = run(new ProcessPayment($gateway), $order);
 ```
 
-Runnable executes that exact instance. Its constructor dependencies are your responsibility, and container bindings or fakes for its class will not replace it.
+Runnable executes the supplied instance unless a fake has been registered for its class. Ordinary container bindings do not replace it. Its constructor still runs, and supplying its constructor dependencies is your responsibility.
 
 ### Dependency Injection
 
@@ -192,7 +192,7 @@ The static method is a convenience. Your class remains an ordinary PHP class.
 
 ## Testing
 
-Runnable uses Mockery to replace individual classes in Laravel's container.
+Runnable uses Mockery to fake individual classes, whether you run them by class name, pass an instance, or resolve them through Laravel's container.
 
 Use these examples in Laravel application tests, where the application container and Mockery are reset between tests.
 
@@ -224,7 +224,21 @@ $fake = Run::fake(ProcessPayment::class, $response);
 
 Pass `null` explicitly to return `null`. If you omit the result entirely, Mockery supplies its default return value for the method's declared return type. Supplied results must satisfy that return type.
 
-Fakes replace container resolutions made after registration. They do not replace instances that were already constructed or injected. Register your fake before exercising the application code under test.
+Fakes also intercept instances passed to the facade or helper:
+
+```php
+$fake = ProcessPayment::fake($response);
+
+$result = run(new ProcessPayment($gateway), $order);
+
+expect($result)->toBe($response);
+
+$fake->shouldHaveReceived('handle')->with($order)->once();
+```
+
+The fake intercepts `handle()`. The constructor still runs before the instance is passed to Runnable.
+
+Register your fake before exercising the application code under test. Container resolutions made after registration receive the fake. Calling `handle()` directly on an existing instance bypasses Runnable and executes the real method.
 
 ### Faking Callbacks
 

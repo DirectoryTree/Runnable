@@ -10,6 +10,13 @@ use Mockery\MockInterface;
 class Runner
 {
     /**
+     * The registered runnable fakes.
+     *
+     * @var array<class-string, MockInterface>
+     */
+    protected array $fakes = [];
+
+    /**
      * Create a new runner.
      */
     public function __construct(
@@ -23,7 +30,11 @@ class Runner
     {
         $runnable = array_shift($arguments);
 
-        if (is_string($runnable)) {
+        $class = is_object($runnable) ? $runnable::class : $runnable;
+
+        if (isset($this->fakes[$class])) {
+            $runnable = $this->fakes[$class];
+        } elseif (is_string($runnable)) {
             $runnable = $this->container->make($runnable);
         }
 
@@ -31,7 +42,7 @@ class Runner
     }
 
     /**
-     * Replace the runnable in the container with a fake.
+     * Register a fake for runnable execution and container resolution.
      *
      * @template T of object
      *
@@ -52,6 +63,6 @@ class Runner
 
         $this->container->instance($runnable, $fake);
 
-        return $fake;
+        return $this->fakes[$runnable] = $fake;
     }
 }
