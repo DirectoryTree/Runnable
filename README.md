@@ -28,15 +28,22 @@ $response = ProcessPayment::run($order);
 
 ```php
 use App\Actions\ProcessPayment;
+use App\Models\Product;
+use App\Models\User;
 use App\Payments\PaymentResponse;
 
+use function Pest\Laravel\actingAs;
 use function Pest\Laravel\post;
 
 it('can process an order', function () {
+    actingAs(User::factory()->create());
+
     ProcessPayment::fake(new PaymentResponse(success: true));
 
-    post(route('orders.store'))
-        ->assertRedirect(route('orders.index'));
+    post(route('orders.store'), [
+        'product_id' => Product::factory()->create()->id,
+        'quantity' => 2,
+    ])->assertRedirect(route('orders.index'));
 });
 ```
 
