@@ -20,10 +20,24 @@
 
 ---
 
-Runnable gives your action and query classes a familiar way to run and fake their results.
+Runnable gives your action and query classes a familiar way to run, with results you can easily fake in tests.
 
 ```php
 $response = ProcessPayment::run($order);
+```
+
+```php
+use App\Actions\ProcessPayment;
+use App\Payments\PaymentResponse;
+
+use function Pest\Laravel\post;
+
+it('can process an order', function () {
+    ProcessPayment::fake(new PaymentResponse(success: true));
+
+    post(route('orders.store'))
+        ->assertRedirect(route('orders.index'));
+});
 ```
 
 ## Requirements
