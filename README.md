@@ -1,7 +1,5 @@
 <h1 align="center">Runnable</h1>
 
-<p align="center">Give your PHP classes a place to run.</p>
-
 <p align="center">Run and fake focused PHP classes using Laravel's container.</p>
 
 <p align="center">
