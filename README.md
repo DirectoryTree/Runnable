@@ -73,9 +73,9 @@ Add the `Runnable` trait to a class with a public `handle()` method:
 namespace App\Actions;
 
 use App\Models\Order;
+use Stripe\StripeClient;
 use App\Payments\PaymentResponse;
 use DirectoryTree\Runnable\Runnable;
-use Stripe\StripeClient;
 
 class ProcessPayment
 {
