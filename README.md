@@ -41,14 +41,14 @@ it('can pay for an order', function () {
 
     actingAs($user);
 
-    $payment = ProcessPayment::fake(
+    $action = ProcessPayment::fake(
         new PaymentResponse(success: true),
     );
 
     post(route('orders.pay', $order))
         ->assertRedirect(route('orders.show', $order));
 
-    $payment->shouldHaveReceived('handle')->once();
+    $action->shouldHaveReceived('handle')->once();
 });
 ```
 
