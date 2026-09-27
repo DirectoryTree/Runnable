@@ -73,27 +73,36 @@ Add the `Runnable` trait to a class with a public `handle()` method:
 ```php
 namespace App\Actions;
 
-use App\Contracts\PaymentGateway;
 use App\Models\Order;
 use App\Payments\PaymentResponse;
 use DirectoryTree\Runnable\Runnable;
+use Stripe\StripeClient;
 
 class ProcessPayment
 {
     use Runnable;
 
     public function __construct(
-        protected PaymentGateway $gateway,
+        protected StripeClient $stripe,
     ) {}
 
     public function handle(Order $order): PaymentResponse
     {
-        return $this->gateway->process($order);
+        $payment = $this->stripe->paymentIntents->create([
+            'amount' => $order->total,
+            'currency' => 'usd',
+            'customer' => $order->user->stripe_id,
+            'payment_method' => $order->user->stripe_payment_method_id,
+            'payment_method_types' => ['card'],
+            'confirm' => true,
+        ]);
+
+        return new PaymentResponse(success: $payment->status === 'succeeded');
     }
 }
 ```
 
-Laravel resolves constructor dependencies through the container. Bind interfaces such as `PaymentGateway` to your implementation as usual.
+Laravel resolves the configured `StripeClient` through the container. This example charges the customer's saved card, with the order total in cents.
 
 ### Running Classes
 
@@ -136,7 +145,7 @@ Using the facade:
 use App\Actions\ProcessPayment;
 use DirectoryTree\Runnable\Facades\Run;
 
-$response = Run::execute(new ProcessPayment($gateway), $order);
+$response = Run::execute(new ProcessPayment($stripe), $order);
 ```
 
 Using the helper:
@@ -146,7 +155,7 @@ use App\Actions\ProcessPayment;
 
 use function DirectoryTree\Runnable\run;
 
-$response = run(new ProcessPayment($gateway), $order);
+$response = run(new ProcessPayment($stripe), $order);
 ```
 
 Runnable executes the supplied instance unless you have registered a fake for its class. Ordinary container bindings do not replace it.
@@ -162,7 +171,7 @@ use function DirectoryTree\Runnable\run;
 
 $fake = ProcessPayment::fake($response);
 
-$result = run(new ProcessPayment($gateway), $order);
+$result = run(new ProcessPayment($stripe), $order);
 
 expect($result)->toBe($response);
 
