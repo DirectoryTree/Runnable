@@ -28,8 +28,8 @@ $response = ProcessPayment::run($order);
 Test an order payment without contacting the payment provider:
 
 ```php
-use function Pest\Laravel\actingAs;
 use function Pest\Laravel\post;
+use function Pest\Laravel\actingAs;
 
 it('can pay for an order', function () {
     $user = User::factory()->create();
