@@ -26,24 +26,30 @@ Runnable gives your action and query classes a familiar way to run, with results
 $response = ProcessPayment::run($order);
 ```
 
+Test an order payment without contacting the payment provider:
+
 ```php
-it('can process an order', function () {
-    actingAs(User::factory()->create());
+use function Pest\Laravel\actingAs;
+use function Pest\Laravel\post;
 
-    $quantity = 2;
+it('can pay for an order', function () {
+    $user = User::factory()->create();
 
-    $product = Product::factory()->create();
+    $order = Order::factory()->for($user)->create([
+        'total' => 5000,
+        'status' => 'pending',
+    ]);
 
-    $fake = ProcessPayment::fake(new PaymentResponse(success: true));
+    actingAs($user);
 
-    post(route('orders.store'), [
-        'product_id' => $product->id,
-        'quantity' => 2,
-    ])->assertRedirect(route('orders.index'));
+    $payment = ProcessPayment::fake(
+        new PaymentResponse(success: true),
+    );
 
-    $fake->shouldHaveReceived('handle')
-        ->with($product->cost * $quantity)
-        ->once();
+    post(route('orders.pay', $order))
+        ->assertRedirect(route('orders.show', $order));
+
+    $payment->shouldHaveReceived('handle')->once();
 });
 ```
 
@@ -188,7 +194,7 @@ Pass `null` explicitly to return `null`. Omitting the result uses Mockery's defa
 Provide a closure when the result depends on the arguments:
 
 ```php
-ProcessPayment::fake(
-    fn (Order $order) => PaymentResponse::successful($order),
-);
+ProcessPayment::fake(fn (Order $order) => new PaymentResponse(
+    success: $order->total <= 5000,
+));
 ```
