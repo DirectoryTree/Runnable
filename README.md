@@ -17,7 +17,6 @@
   <a href="#testing">Testing</a>
 </p>
 
-
 ---
 
 Runnable gives your action and query classes a familiar way to run, with results you can easily fake in tests.
@@ -83,26 +82,19 @@ class ProcessPayment
     use Runnable;
 
     public function __construct(
-        protected StripeClient $stripe,
+        protected StripeClient $stripe
     ) {}
 
     public function handle(Order $order): PaymentResponse
     {
         $payment = $this->stripe->paymentIntents->create([
-            'amount' => $order->total,
-            'currency' => 'usd',
-            'customer' => $order->user->stripe_id,
-            'payment_method' => $order->user->stripe_payment_method_id,
-            'payment_method_types' => ['card'],
-            'confirm' => true,
+            // ...
         ]);
 
         return new PaymentResponse(success: $payment->status === 'succeeded');
     }
 }
 ```
-
-Laravel resolves the configured `StripeClient` through the container. This example charges the customer's saved card, with the order total in cents.
 
 ### Running Classes
 
