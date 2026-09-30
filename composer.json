@@ -5,8 +5,7 @@
     "keywords": [
         "laravel",
         "runnable",
-        "actions",
-        "testing"
+        "actions"
     ],
     "license": "MIT",
     "authors": [
