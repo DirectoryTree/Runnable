@@ -61,7 +61,7 @@ class Runner
             $expectation->andReturn($result);
         }
 
-        $this->container->instance($runnable, $fake);
+        $this->container->bind($runnable, fn () => $fake);
 
         return $this->fakes[$runnable] = $fake;
     }

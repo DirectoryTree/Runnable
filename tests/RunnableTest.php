@@ -76,6 +76,17 @@ it('shares a class fake across all execution styles and dependency injection', f
     $fake->shouldHaveReceived('handle')->with(10000)->times(4);
 });
 
+it('uses the fake when resolving with explicit constructor parameters', function () {
+    $fake = CalculateOrderTotal::fake(11500);
+
+    $calculate = app()->make(CalculateOrderTotal::class, ['taxRate' => 0.05]);
+
+    expect($calculate)->toBe($fake)
+        ->and($calculate->handle(10000))->toBe(11500);
+
+    $fake->shouldHaveReceived('handle')->with(10000)->once();
+});
+
 it('fakes a result through the facade', function () {
     $fake = Run::fake(CalculateOrderTotal::class, 11500);
 
